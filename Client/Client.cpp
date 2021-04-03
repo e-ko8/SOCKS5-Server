@@ -7,21 +7,63 @@ Client::Client(boost::asio::ip::tcp::socket &&sock, boost::asio::io_context &ctx
 
 void Client::MakeHandshake()
 {
-    if (client_buffer[1] != 0xFF)
+    WriteOnSocket(client_socket,client_buffer);
+
+    if (client_buffer.back() != 0xFF)
     {
         handshake_completed = true;
     }
-
-    WriteOnSocket(client_socket,client_buffer);
 }
 
-void Client::StartProtocolPart() {
+void Client::CheckHandshakeMessage()
+{
+    if ( client_buffer.size() < 3 )
+    {
+        client_buffer = {0x05, 0xFF};
+        return;
+    }
 
+    if ( (client_buffer[0]!=0x05) || (( client_buffer.size() - 2 ) != client_buffer[1]))
+    {
+        client_buffer = {0x05, 0xFF};
+        return;
+    }
+
+    for (auto byte = client_buffer.begin() + 2; byte != client_buffer.end(); byte++)
+    {
+        if (*byte == 0x00)
+        {
+            client_buffer = {0x05, 0x00};
+            return;
+        }
+    }
+
+    client_buffer = {0x05, 0xFF};
+}
+
+void Client::CheckProtocolMessage()
+{
+    //TODO
+}
+
+void Client::StartProtocolPart()
+{
+    //TODO
 }
 
 void Client::ReadFromClient(int volume)
 {
+    ReadFromSocket(client_socket,client_buffer,volume);
 
+    if(!handshake_completed)
+    {
+        CheckHandshakeMessage();
+    }
+
+    if(!protocol_part_completed)
+    {
+        CheckProtocolMessage();
+    }
 }
 
 void Client::ReadFromServer(int volume) {
@@ -51,6 +93,7 @@ void Client::WriteOnSocket(boost::asio::ip::tcp::socket &to, std::vector<std::ui
                 break;
             }
         }
+
         buf.erase(buf.begin(), buf.begin() + bytes_written);
     }
 }
@@ -78,3 +121,9 @@ void Client::ReadFromSocket(boost::asio::ip::tcp::socket &from, std::vector<std:
         iter += bytes_received;
     }
 }
+
+void Client::SendException()
+{
+    throw std::runtime_error("Client error occured");
+}
+

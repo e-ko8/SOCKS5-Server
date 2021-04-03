@@ -35,12 +35,16 @@ private:
 
     void WriteOnSocket(boost::asio::ip::tcp::socket& to, std::vector<std::uint8_t>& buf);
     void ReadFromSocket(boost::asio::ip::tcp::socket& from, std::vector<std::uint8_t>& buf, int volume);
+    void CheckHandshakeMessage();
+    void CheckProtocolMessage();
+    void SendException();
 
     boost::asio::ip::tcp::socket client_socket, server_socket;
     std::vector<std::uint8_t> client_buffer, server_buffer;
 
     bool handshake_completed = false;
     bool protocol_part_completed = false;
+    bool error_occured = false;
 
 };
 
