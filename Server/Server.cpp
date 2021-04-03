@@ -1,4 +1,6 @@
 #include "Server.hpp"
+#include <iostream>
+#include <boost/exception/diagnostic_information.hpp>
 
 Server::Server(ServerParameters &input) : server_params{input}, listener{server_params.ctx}, clients_manager{server_params.ctx}
 {
@@ -19,45 +21,57 @@ Server::Server(ServerParameters &input) : server_params{input}, listener{server_
 
 [[noreturn]] void Server::StartListening()
 {
+    std::cerr << "Listening...\n";
     while(true)
     {
         auto event = kqueue_manager.WaitEvent();
 
-        if ( event.flags & EV_EOF )
+        try
         {
-            RemoveClient(event.ident);
-            continue;
-        }
-
-        if (event.ident == listener.descriptor)
-        {
-            AcceptClient();
-            continue;
-        }
-
-        switch(event.filter)
-        {
-            case EVFILT_TIMER:
+            if ( event.flags & EV_EOF )
             {
                 RemoveClient(event.ident);
-                break;
+                continue;
             }
 
-            case EVFILT_READ:
+            if (event.ident == listener.descriptor)
             {
-                ReadEventOccured(event);
-                break;
+                AcceptClient();
+                continue;
             }
 
-            case EVFILT_WRITE:
+            switch(event.filter)
             {
-                WriteEventOccured(event);
-                break;
-            }
+                case EVFILT_TIMER:
+                {
+                    RemoveClient(event.ident);
+                    break;
+                }
 
-            default: break;
+                case EVFILT_READ:
+                {
+                    ReadEventOccured(event);
+                    break;
+                }
+
+                case EVFILT_WRITE:
+                {
+                    WriteEventOccured(event);
+                    break;
+                }
+
+                default: break;
+            }
         }
 
+        catch (boost::exception& exception)
+        {
+            std::cerr << boost::diagnostic_information(exception) << "\n";
+            if(event.ident!=listener.descriptor)
+            {
+                RemoveClient(event.ident);
+            }
+        }
     }
 }
 
@@ -69,6 +83,7 @@ void Server::AcceptClient()
     if (!error)
     {
         int client_descriptor = clients_manager.socket.native_handle();
+        std::cerr << "Connected client with desc " << client_descriptor << "\n";
         kqueue_manager.WaitForReadEvent(client_descriptor);
         clients_manager.clients[client_descriptor] = std::make_unique<Client>(std::move(clients_manager.socket),server_params.ctx);
     }
@@ -76,6 +91,7 @@ void Server::AcceptClient()
 
 void Server::RemoveClient(int desc)
 {
+    //TODO Проверить, что удаляются оба!!!
     kqueue_manager.StopAllEventsWaiting(desc);
 
     int third_party_desc = clients_manager.routes[desc];
@@ -86,6 +102,13 @@ void Server::RemoveClient(int desc)
     if(clients_manager.clients.count(desc)!=0)
     {
         clients_manager.clients.extract(desc);
+        std::cerr << "Disconnecting client with desc " << desc << "\n";
+    }
+
+    if(clients_manager.clients.count(third_party_desc)!=0)
+    {
+        clients_manager.clients.extract(third_party_desc);
+        std::cerr << "Disconnecting third party with desc " << third_party_desc << "\n";
     }
 }
 
@@ -108,6 +131,8 @@ void Server::ReadEventOccured(const struct kevent& event)
             {
                 int third_party_desc = client->GetServerDescriptor();
                 clients_manager.AddRoute(event.ident, third_party_desc);
+                std::cerr << event.ident << " -> " << third_party_desc << "\n";
+                std::cerr << third_party_desc << " <- " << event.ident << "\n";
                 kqueue_manager.WaitForReadEvent(third_party_desc);
             }
 

@@ -38,9 +38,12 @@ private:
     void CheckHandshakeMessage();
     void CheckProtocolMessage();
     void SendException();
+    void ConnectToThirdParty();
 
     boost::asio::ip::tcp::socket client_socket, server_socket;
     std::vector<std::uint8_t> client_buffer, server_buffer;
+
+    boost::asio::ip::tcp::resolver resolver;
 
     bool handshake_completed = false;
     bool protocol_part_completed = false;
