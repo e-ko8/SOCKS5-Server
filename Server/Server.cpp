@@ -25,7 +25,7 @@ Server::Server(ServerParameters &input) : server_params{input}, listener{server_
 
         if ( event.flags & EV_EOF )
         {
-            //TODO
+            RemoveClient(event.ident);
             continue;
         }
 
@@ -39,19 +39,19 @@ Server::Server(ServerParameters &input) : server_params{input}, listener{server_
         {
             case EVFILT_TIMER:
             {
-                //TODO
+                RemoveClient(event.ident);
                 break;
             }
 
             case EVFILT_READ:
             {
-                //TODO
+                ReadEventOccured(event);
                 break;
             }
 
             case EVFILT_WRITE:
             {
-                //TODO
+                WriteEventOccured(event);
                 break;
             }
 
@@ -70,6 +70,91 @@ void Server::AcceptClient()
     {
         int client_descriptor = clients_manager.socket.native_handle();
         kqueue_manager.WaitForReadEvent(client_descriptor);
-        clients_manager.clients[client_descriptor]= std::make_unique<Client>(std::move(clients_manager.socket),server_params.ctx);
+        clients_manager.clients[client_descriptor] = std::make_unique<Client>(std::move(clients_manager.socket),server_params.ctx);
+    }
+}
+
+void Server::RemoveClient(int desc)
+{
+    kqueue_manager.StopAllEventsWaiting(desc);
+
+    int third_party_desc = clients_manager.routes[desc];
+    kqueue_manager.StopAllEventsWaiting(third_party_desc);
+
+    clients_manager.EraseRoute(desc, third_party_desc);
+
+    if(clients_manager.clients.count(desc)!=0)
+    {
+        clients_manager.clients.extract(desc);
+    }
+}
+
+void Server::ReadEventOccured(const struct kevent& event)
+{
+    if (clients_manager.clients.count(event.ident)!=0)
+    {
+        auto& client = clients_manager.clients[event.ident];
+        client->ReadFromClient(event.data);
+
+        if(!client->IsProtocolPartCompleted())
+        {
+            kqueue_manager.WaitForWriteEvent(event.ident);
+        }
+
+        else
+        {
+
+            if(clients_manager.routes.count(event.ident) == 0)
+            {
+                int third_party_desc = client->GetServerDescriptor();
+                clients_manager.AddRoute(event.ident, third_party_desc);
+                kqueue_manager.WaitForReadEvent(third_party_desc);
+            }
+
+            kqueue_manager.WaitForWriteEvent(clients_manager.routes[event.ident]);
+        }
+
+    }
+
+    else
+    {
+        int client_desc = clients_manager.routes[event.ident];
+        auto& client = clients_manager.clients[client_desc];
+
+        client->ReadFromServer(event.data);
+        kqueue_manager.WaitForWriteEvent(client_desc);
+    }
+}
+
+void Server::WriteEventOccured(const struct kevent& event)
+{
+    if (clients_manager.clients.count(event.ident)!=0)
+    {
+        auto& client = clients_manager.clients[event.ident];
+
+        if(!client->IsHandshakeCompleted())
+        {
+            client->MakeHandshake();
+        }
+
+        else if(!client->IsProtocolPartCompleted())
+        {
+            client->StartProtocolPart();
+        }
+
+        else
+        {
+            client->WriteToClient();
+        }
+
+        kqueue_manager.StopWriteWaiting(event.ident);
+    }
+
+    else
+    {
+        int client_desc = clients_manager.routes[event.ident];
+        auto& client = clients_manager.clients[client_desc];
+
+        client->WriteToServer();
     }
 }

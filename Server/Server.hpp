@@ -15,6 +15,25 @@ struct ServerParameters
 struct ClientsManager
 {
     explicit ClientsManager(boost::asio::io_context& ctx) : socket{ctx} {};
+    void EraseRoute(int from, int to)
+    {
+        if (routes.count(from)!=0)
+        {
+            routes.extract(from);
+        }
+
+        if(routes.count(to)!=0)
+        {
+            routes.extract(to);
+        }
+    }
+
+    void AddRoute(int from, int to)
+    {
+        routes[from] = to;
+        routes[to] = from;
+    }
+
     boost::asio::ip::tcp::socket socket;
     std::map<int, std::unique_ptr<Client>> clients;
     std::map<int,int> routes;
@@ -39,6 +58,12 @@ public:
 private:
 
     void AcceptClient();
+
+    void RemoveClient(int desc);
+
+    void ReadEventOccured(const struct kevent& event);
+
+    void WriteEventOccured(const struct kevent& event);
 
     ServerParameters& server_params;
     ClientsManager clients_manager;
