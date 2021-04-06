@@ -72,7 +72,12 @@ void ClientsManager::DeleteClient(int desc)
 
 int ClientsManager::GetRoute(int from)
 {
-    return routes.at(from);
+    if(IsRouteExist(from))
+    {
+        return routes.at(from);
+    }
+
+    return -1;
 }
 
 bool ClientsManager::IsRouteExist(int from)

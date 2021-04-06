@@ -129,7 +129,7 @@ void Client::CompleteProtocolPart()
 
 void Client::ConnectToThirdParty()
 {
-    auto MakeAnswer = [&](std::uint8_t code, int connection_type, std::string& target, std::uint16_t port)
+    auto MakeAnswer = [&](std::uint8_t code, int connection_type, std::vector<std::uint8_t> target, std::uint16_t port)
     {
         client_buffer = {0x05, code, 0x00};
 
@@ -138,14 +138,14 @@ void Client::ConnectToThirdParty()
             case 0x01:
             {
                 client_buffer.push_back(0x01);
-                //TODO
+                client_buffer.insert(client_buffer.end(), target.begin(), target.end());
                 break;
             }
 
             case (0x03):
             {
                 client_buffer.push_back(0x03);
-                client_buffer.push_back(target.length());
+                client_buffer.push_back(target.size());
                 client_buffer.insert(client_buffer.end(), target.begin(), target.end());
                 break;
             }
@@ -153,7 +153,7 @@ void Client::ConnectToThirdParty()
             case 0x04:
             {
                 client_buffer.push_back(0x04);
-                //TODO
+                client_buffer.insert(client_buffer.end(), target.begin(), target.end());
                 break;
             }
 
@@ -171,25 +171,26 @@ void Client::ConnectToThirdParty()
     {
         case 0x01:
         {
-            std::string ip = {client_buffer.begin()+4, client_buffer.end()-2};
+            std::array<std::uint8_t,4> ip = {};
+            std::copy(client_buffer.begin()+4, client_buffer.end()-2, ip.begin());
 
             std::uint16_t port = 0;
             std::memmove(&port, client_buffer.data()+(client_buffer.size()-2), 2);
             port = boost::endian::big_to_native(port);
 
-            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v4::from_string(ip), port);
+            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v4(ip), port);
 
             boost::system::error_code error;
             server_socket.connect(endpoint, error);
             if(!error)
             {
                 server_socket.non_blocking(true);
-                MakeAnswer(0x00,0x01, ip, port);
+                MakeAnswer(0x00,0x01, {ip.begin(), ip.end()}, port);
             }
 
             else
             {
-                MakeAnswer(0x05,0x01, ip, port);
+                MakeAnswer(0x05,0x01, {ip.begin(), ip.end()}, port);
             }
             break;
         }
@@ -210,12 +211,12 @@ void Client::ConnectToThirdParty()
             if(!error)
             {
                 server_socket.non_blocking(true);
-                MakeAnswer(0x00,0x03, domain, port);
+                MakeAnswer(0x00,0x03, {domain.begin(), domain.end()}, port);
             }
 
             else
             {
-                MakeAnswer(0x05,0x03, domain, port);
+                MakeAnswer(0x05,0x03, {domain.begin(), domain.end()}, port);
             }
 
             break;
@@ -223,13 +224,14 @@ void Client::ConnectToThirdParty()
 
         case 0x04:
         {
-            std::string ip = {client_buffer.begin()+4, client_buffer.end()-2};
+            std::array<std::uint8_t,16> ip = {};
+            std::copy(client_buffer.begin()+4, client_buffer.end()-2, ip.begin());
 
             std::uint16_t port = 0;
             std::memmove(&port, client_buffer.data()+(client_buffer.size()-2), 2);
             port = boost::endian::big_to_native(port);
 
-            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v6::from_string(ip), port);
+            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v6(ip), port);
 
             boost::system::error_code error;
             server_socket.connect(endpoint,error);
@@ -237,12 +239,12 @@ void Client::ConnectToThirdParty()
             if(!error)
             {
                 server_socket.non_blocking(true);
-                MakeAnswer(0x00,0x04, ip, port);
+                MakeAnswer(0x00,0x04, {ip.begin(), ip.end()}, port);
             }
 
             else
             {
-                MakeAnswer(0x05,0x04, ip, port);
+                MakeAnswer(0x05,0x04, {ip.begin(), ip.end()}, port);
             }
             break;
         }

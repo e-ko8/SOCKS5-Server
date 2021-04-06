@@ -81,7 +81,6 @@ Server::Server(ServerParameters &input) : server_params{input}, listener{server_
                 RemoveClient(event.ident);
             }
         }
-
     }
 }
 
