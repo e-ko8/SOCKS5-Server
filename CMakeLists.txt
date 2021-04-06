@@ -8,6 +8,7 @@ set(    INCLUDE_PATHS
         Server
         Client
         Demultiplexer
+        Server/ClientManager
         )
 
 
@@ -17,6 +18,7 @@ set(    SOURCE_FILES
         Server/Server.cpp
         Demultiplexer/Demultiplexer.cpp
         Client/Client.cpp
+        Server/ClientManager/ClientManager.cpp
         )
 
 

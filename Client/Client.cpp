@@ -6,7 +6,7 @@ Client::Client(boost::asio::ip::tcp::socket &&sock, boost::asio::io_context &ctx
     client_socket.non_blocking(true);
 }
 
-void Client::MakeHandshake()
+void Client::CompleteHandshake()
 {
     WriteOnSocket(client_socket,client_buffer);
 
@@ -112,7 +112,7 @@ void Client::CheckProtocolMessage()
     error_occured = false;
 }
 
-void Client::StartProtocolPart()
+void Client::CompleteProtocolPart()
 {
     if(error_occured)
     {
@@ -171,7 +171,26 @@ void Client::ConnectToThirdParty()
     {
         case 0x01:
         {
+            std::string ip = {client_buffer.begin()+4, client_buffer.end()-2};
 
+            std::uint16_t port = 0;
+            std::memmove(&port, client_buffer.data()+(client_buffer.size()-2), 2);
+            port = boost::endian::big_to_native(port);
+
+            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v4::from_string(ip), port);
+
+            boost::system::error_code error;
+            server_socket.connect(endpoint, error);
+            if(!error)
+            {
+                server_socket.non_blocking(true);
+                MakeAnswer(0x00,0x01, ip, port);
+            }
+
+            else
+            {
+                MakeAnswer(0x05,0x01, ip, port);
+            }
             break;
         }
 
@@ -204,7 +223,27 @@ void Client::ConnectToThirdParty()
 
         case 0x04:
         {
-            //TODO
+            std::string ip = {client_buffer.begin()+4, client_buffer.end()-2};
+
+            std::uint16_t port = 0;
+            std::memmove(&port, client_buffer.data()+(client_buffer.size()-2), 2);
+            port = boost::endian::big_to_native(port);
+
+            boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v6::from_string(ip), port);
+
+            boost::system::error_code error;
+            server_socket.connect(endpoint,error);
+
+            if(!error)
+            {
+                server_socket.non_blocking(true);
+                MakeAnswer(0x00,0x04, ip, port);
+            }
+
+            else
+            {
+                MakeAnswer(0x05,0x04, ip, port);
+            }
             break;
         }
 
@@ -287,8 +326,8 @@ void Client::ReadFromSocket(boost::asio::ip::tcp::socket &from, std::vector<std:
     }
 }
 
-void Client::SendException()
+void Client::RaiseException(std::string msg)
 {
-    throw std::runtime_error("Client error occured");
+    throw std::runtime_error("Client" + std::to_string(client_socket.native_handle()) + "error occured:" + msg);
 }
 

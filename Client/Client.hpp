@@ -10,8 +10,8 @@ public:
     void ReadFromClient(int volume);
     void ReadFromServer(int volume);
 
-    void MakeHandshake();
-    void StartProtocolPart();
+    void CompleteHandshake();
+    void CompleteProtocolPart();
 
     void WriteToClient();
     void WriteToServer();
@@ -37,7 +37,7 @@ private:
     void ReadFromSocket(boost::asio::ip::tcp::socket& from, std::vector<std::uint8_t>& buf, int volume);
     void CheckHandshakeMessage();
     void CheckProtocolMessage();
-    void SendException();
+    void RaiseException(std::string msg);
     void ConnectToThirdParty();
 
     boost::asio::ip::tcp::socket client_socket, server_socket;
