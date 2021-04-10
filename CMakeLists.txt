@@ -10,6 +10,7 @@ set(    INCLUDE_PATHS
         Demultiplexer
         Server/ClientManager
         Exceptions
+        Logger
         )
 
 
@@ -21,6 +22,7 @@ set(    SOURCE_FILES
         Client/Client.cpp
         Server/ClientManager/ClientManager.cpp
         Exceptions/SocksError.cpp
+        Logger/Logger.cpp
         )
 
 

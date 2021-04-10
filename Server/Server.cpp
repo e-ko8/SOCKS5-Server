@@ -2,7 +2,8 @@
 #include <iostream>
 #include <boost/exception/diagnostic_information.hpp>
 
-Server::Server(ServerParameters &input) : server_params{input}, listener{server_params.ctx}, clients_manager{listener.acceptor,server_params.ctx}
+Server::Server(ServerParameters &input, Logger& logger_) : server_params{input}, listener{server_params.ctx}, clients_manager{listener.acceptor,server_params.ctx},
+                                          logger(logger_)
 {
     boost::asio::ip::tcp::endpoint ep{boost::asio::ip::address::from_string("127.0.0.1"), server_params.port};
 

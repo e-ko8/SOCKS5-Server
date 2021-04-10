@@ -5,6 +5,7 @@
 #include "Demultiplexer.hpp"
 #include "Client.hpp"
 #include "ClientManager.hpp"
+#include "Logger.hpp"
 
 struct ServerParameters
 {
@@ -12,8 +13,6 @@ struct ServerParameters
     std::uint16_t port;
     std::size_t threads;
 };
-
-
 
 struct Listener
 {
@@ -27,7 +26,7 @@ class Server
 
 public:
 
-    explicit Server(ServerParameters& input);
+    explicit Server(ServerParameters& input, Logger& logger_);
 
     [[noreturn]] void StartListening();
 
@@ -45,7 +44,7 @@ private:
     ClientsManager clients_manager;
     Listener listener;
     Demultiplexer kqueue_manager;
-
+    Logger& logger;
 };
 
 
