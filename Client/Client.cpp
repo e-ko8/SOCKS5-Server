@@ -185,7 +185,7 @@ void Client::ConnectToThirdParty()
             connection_info.port = boost::endian::big_to_native(connection_info.port);
 
             boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::address_v6(ip), connection_info.port);
-            
+
             server_socket.connect(endpoint,error);
 
             if(!error)

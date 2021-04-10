@@ -10,39 +10,6 @@ struct ConnectionInfo
     std::uint16_t port;
 };
 
-enum class ErrorType {InvalidRequest,MessageNotFull, NoError, NoSuchMethod};
-
-class SocksError
-{
-
-public:
-
-    SocksError() = default;
-
-    SocksError(ErrorType type_, std::string msg) : type(type_), message(msg), is_occured(true) { };
-
-    explicit operator bool() const
-    {
-        return is_occured;
-    }
-
-    [[nodiscard]] std::string Message() const
-    {
-        return message;
-    }
-
-    [[nodiscard]] ErrorType Type() const
-    {
-        return type;
-    }
-
-private:
-
-    bool is_occured = false;
-    ErrorType type = ErrorType::NoError;
-    std::string message = "success";
-};
-
 class Client
 {
 public:
