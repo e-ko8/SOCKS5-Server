@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 
-enum class ErrorType {InvalidRequest,MessageNotFull, NoError, NoSuchMethod};
+enum class ErrorType {InvalidRequest, MessageNotFull, NoError, NoSuchMethod};
 
 class SocksError
 {

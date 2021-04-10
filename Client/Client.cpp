@@ -8,6 +8,28 @@ Client::Client(boost::asio::ip::tcp::socket &&sock, boost::asio::io_context &ctx
 
 void Client::CompleteHandshake()
 {
+    if(socks_error)
+    {
+        switch (socks_error.Type())
+        {
+            case (ErrorType::MessageNotFull):
+            {
+                return;
+            }
+
+            case (ErrorType::NoSuchMethod):
+            {
+                break;
+            }
+
+            default:
+            {
+                RaiseException(socks_error.Message());
+                break;
+            }
+        }
+    }
+
     WriteOnSocket(client_socket,client_buffer);
 
     if (client_buffer.back() != 0xFF)
@@ -99,15 +121,24 @@ void Client::CompleteProtocolPart()
 {
     if(socks_error)
     {
-        RaiseException(socks_error.Message());
+        switch (socks_error.Type())
+        {
+            case (ErrorType::MessageNotFull):
+            {
+                return;
+            }
+
+            default:
+            {
+                RaiseException(socks_error.Message());
+                break;
+            }
+        }
     }
 
-    else
-    {
-        ConnectToThirdParty();
-        WriteOnSocket(client_socket, client_buffer);
-        protocol_part_completed = true;
-    }
+    ConnectToThirdParty();
+    WriteOnSocket(client_socket, client_buffer);
+    protocol_part_completed = true;
 }
 
 void Client::ConnectToThirdParty()
@@ -208,13 +239,13 @@ void Client::ReadFromClient(int volume)
 
     if(!handshake_completed)
     {
-        CheckHandshakeMessage();
+        socks_error = CheckHandshakeMessage();
         return;
     }
 
     if(!protocol_part_completed)
     {
-        CheckProtocolMessage();
+        socks_error = CheckProtocolMessage();
         return;
     }
 }
