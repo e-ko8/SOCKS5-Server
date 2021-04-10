@@ -2,6 +2,47 @@
 #include <boost/asio.hpp>
 #include <vector>
 
+struct ConnectionInfo
+{
+    std::uint8_t code;
+    int connection_type;
+    std::vector<std::uint8_t> target;
+    std::uint16_t port;
+};
+
+enum class ErrorType {InvalidRequest,MessageNotFull, NoError, NoSuchMethod};
+
+class SocksError
+{
+
+public:
+
+    SocksError() = default;
+
+    SocksError(ErrorType type_, std::string msg) : type(type_), message(msg), is_occured(true) { };
+
+    explicit operator bool() const
+    {
+        return is_occured;
+    }
+
+    [[nodiscard]] std::string Message() const
+    {
+        return message;
+    }
+
+    [[nodiscard]] ErrorType Type() const
+    {
+        return type;
+    }
+
+private:
+
+    bool is_occured = false;
+    ErrorType type = ErrorType::NoError;
+    std::string message = "success";
+};
+
 class Client
 {
 public:
@@ -35,10 +76,12 @@ private:
 
     void WriteOnSocket(boost::asio::ip::tcp::socket& to, std::vector<std::uint8_t>& buf);
     void ReadFromSocket(boost::asio::ip::tcp::socket& from, std::vector<std::uint8_t>& buf, int volume);
-    void CheckHandshakeMessage();
-    void CheckProtocolMessage();
+    SocksError CheckHandshakeMessage();
+    SocksError CheckProtocolMessage();
+    void FormProtoAnswer(const ConnectionInfo& connection_info);
     void RaiseException(std::string msg);
     void ConnectToThirdParty();
+    void FormConnectionCode(ConnectionInfo& connection_info, boost::system::error_code& error);
 
     boost::asio::ip::tcp::socket client_socket, server_socket;
     std::vector<std::uint8_t> client_buffer, server_buffer;
@@ -47,7 +90,7 @@ private:
 
     bool handshake_completed = false;
     bool protocol_part_completed = false;
-    bool error_occured = false;
+    SocksError socks_error;
 
 };
 
