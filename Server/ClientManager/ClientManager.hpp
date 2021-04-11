@@ -2,6 +2,7 @@
 #include <boost/asio.hpp>
 #include "Client.hpp"
 #include <memory>
+#include "Logger.hpp"
 
 struct AcceptorCtx
 {
@@ -13,7 +14,7 @@ class ClientsManager
 {
 public:
 
-    explicit ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context& ctx_);
+    explicit ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context& ctx_, Logger& logger_);
     ClientsManager(ClientsManager&& other) = delete;
     ClientsManager(const ClientsManager& other) = delete;
 
@@ -43,7 +44,7 @@ private:
     std::map<u_long,u_long> routes;
 
     AcceptorCtx acceptor_ctx;
-
+    Logger& logger;
 };
 
 

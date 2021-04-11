@@ -1,7 +1,7 @@
 #include "ClientManager.hpp"
 #include <iostream>
 
-ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_): socket{ctx_}, acceptor_ctx{ctx_,acceptor_}
+ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_, Logger& logger_): socket{ctx_}, acceptor_ctx{ctx_,acceptor_}, logger{logger_}
 {
 
 }
@@ -39,7 +39,8 @@ u_long ClientsManager::AddClient()
 
     if (!error)
     {
-        std::cerr << "Connected client with desc " << client_descriptor << "\n";
+
+        logger.Log("Connected client with ip " + socket.remote_endpoint().address().to_string() + " and desc " + std::to_string(client_descriptor));
         clients[client_descriptor] = std::make_unique<Client>(std::move(socket),acceptor_ctx.ctx);
     }
 
@@ -60,13 +61,13 @@ void ClientsManager::DeleteClient(u_long desc)
     if(IsClient(desc))
     {
         clients.extract(desc);
-        std::cerr << "Disconnecting client with desc " << desc << "\n";
+        logger.Log("Disconnecting client with desc " + std::to_string(desc));
     }
 
     if(IsClient(third_party_desc))
     {
         clients.extract(third_party_desc);
-        std::cerr << "Disconnecting third party with desc " << third_party_desc << "\n";
+        logger.Log("Disconnecting third party with desc " + std::to_string(third_party_desc));
     }
 }
 

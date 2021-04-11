@@ -124,8 +124,6 @@ void Server::ReadEventOccured(const struct kevent& event)
             {
                 u_long third_party_desc = client->GetServerDescriptor();
                 clients_manager.AddRoute(event.ident, third_party_desc);
-                std::cerr << event.ident << " -> " << third_party_desc << "\n";
-                std::cerr << third_party_desc << " <- " << event.ident << "\n";
                 kqueue_manager.WaitForReadEvent(third_party_desc);
             }
 
