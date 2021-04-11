@@ -12,19 +12,25 @@ class Demultiplexer
 public:
 
     Demultiplexer();
+    Demultiplexer(Demultiplexer&& other) noexcept;
+    Demultiplexer(const Demultiplexer& other) = delete;
+
+    Demultiplexer& operator=(Demultiplexer&& other) noexcept;
+    Demultiplexer& operator=(const Demultiplexer& other) = delete;
+
 
     struct kevent WaitEvent();
 
-    void WaitForReadEvent(int desc);
-    void WaitForWriteEvent(int desc);
+    void WaitForReadEvent(u_long desc);
+    void WaitForWriteEvent(u_long desc);
 
-    void StopReadWaiting(int desc);
-    void StopWriteWaiting(int desc);
+    void StopReadWaiting(u_long desc);
+    void StopWriteWaiting(u_long desc);
 
-    void StopAllEventsWaiting(int desc);
+    void StopAllEventsWaiting(u_long desc);
 
-    void StartTimer(int desc, int duration);
-    void StopTimer(int desc);
+    void StartTimer(u_long desc, u_long duration);
+    void StopTimer(u_long desc);
 
     ~Demultiplexer();
 
@@ -32,9 +38,9 @@ private:
 
     int id;
 
-    struct kevent event;
-    struct kevent new_event;
-    struct timespec timeout;
+    struct kevent event{};
+    struct kevent new_event{};
+    struct timespec timeout{};
 };
 
 

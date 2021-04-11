@@ -27,6 +27,11 @@ class Server
 public:
 
     explicit Server(ServerParameters& input, Logger& logger_);
+    Server(Server&& other) = delete;
+    Server(const Server& other) = delete;
+
+    Server& operator=(Server&& other) = delete;
+    Server& operator=(const Server& other) = delete;
 
     [[noreturn]] void StartListening();
 
@@ -34,7 +39,7 @@ private:
 
     void AcceptClient();
 
-    void RemoveClient(int desc);
+    void RemoveClient(u_long desc);
 
     void ReadEventOccured(const struct kevent& event);
 

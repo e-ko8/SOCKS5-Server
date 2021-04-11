@@ -233,7 +233,7 @@ void Client::ConnectToThirdParty()
     }
 }
 
-void Client::ReadFromClient(int volume)
+void Client::ReadFromClient(u_long volume)
 {
     ReadFromSocket(client_socket,client_buffer,volume);
 
@@ -250,7 +250,7 @@ void Client::ReadFromClient(int volume)
     }
 }
 
-void Client::ReadFromServer(int volume)
+void Client::ReadFromServer(u_long volume)
 {
     ReadFromSocket(server_socket,server_buffer,volume);
 }
@@ -271,7 +271,7 @@ void Client::WriteOnSocket(boost::asio::ip::tcp::socket &to, std::vector<std::ui
 
     while (!buf.empty())
     {
-        std::size_t bytes_written = to.write_some(boost::asio::buffer(buf), error);
+        u_long bytes_written = to.write_some(boost::asio::buffer(buf), error);
 
         if (error)
         {
@@ -281,11 +281,11 @@ void Client::WriteOnSocket(boost::asio::ip::tcp::socket &to, std::vector<std::ui
             }
         }
 
-        buf.erase(buf.begin(), buf.begin() + bytes_written);
+        buf.erase(buf.begin(), buf.begin() + static_cast<long>(bytes_written));
     }
 }
 
-void Client::ReadFromSocket(boost::asio::ip::tcp::socket &from, std::vector<std::uint8_t> &buf, int volume)
+void Client::ReadFromSocket(boost::asio::ip::tcp::socket &from, std::vector<std::uint8_t> &buf, u_long volume)
 {
     std::size_t iter = buf.size();
     buf.resize(iter + volume);
@@ -311,7 +311,7 @@ void Client::ReadFromSocket(boost::asio::ip::tcp::socket &from, std::vector<std:
 
 void Client::RaiseException(std::string msg)
 {
-    throw std::runtime_error("Client" + std::to_string(client_socket.native_handle()) + "error occured: " + msg);
+    throw std::runtime_error("Client" + std::to_string(client_socket.native_handle()) + "error occured: " + std::move(msg));
 }
 
 void Client::FormConnectionCode(ConnectionInfo &connection_info, boost::system::error_code &error)
@@ -333,7 +333,7 @@ void Client::FormConnectionCode(ConnectionInfo &connection_info, boost::system::
         case boost::system::errc::network_unreachable:
         {
             connection_info.code = 0x03;
-            break;;
+            break;
         }
 
         case boost::system::errc::host_unreachable:
@@ -399,5 +399,42 @@ void Client::FormProtoAnswer(const ConnectionInfo &connection_info)
 
     client_buffer.push_back(boost::endian::native_to_big(connection_info.port) & 0xFF);
     client_buffer.push_back(boost::endian::native_to_big(connection_info.port) >> 8);
+}
+
+Client::Client(Client &&other) noexcept : client_socket{std::move(other.client_socket)}, server_socket{std::move(other.server_socket)}, resolver{std::move(other.resolver)}
+{
+    client_buffer = std::move(other.client_buffer);
+    server_buffer = std::move(other.server_buffer);
+
+    handshake_completed = other.handshake_completed;
+    other.handshake_completed = false;
+
+    protocol_part_completed = other.protocol_part_completed;
+    other.protocol_part_completed = false;
+
+    socks_error = std::move(other.socks_error);
+}
+
+Client &Client::operator=(Client &&other) noexcept
+{
+    if(this!=&other)
+    {
+        client_socket = std::move(other.client_socket);
+        server_socket = std::move(other.server_socket);
+
+        resolver = std::move(other.resolver);
+
+        client_buffer = std::move(other.client_buffer);
+        server_buffer = std::move(other.server_buffer);
+
+        handshake_completed = other.handshake_completed;
+        other.handshake_completed = false;
+
+        protocol_part_completed = other.protocol_part_completed;
+        other.protocol_part_completed = false;
+
+        socks_error = std::move(other.socks_error);
+    }
+    return *this;
 }
 

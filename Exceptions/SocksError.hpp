@@ -12,6 +12,11 @@ public:
 
     SocksError() = default;
     SocksError(ErrorType type_, std::string msg);
+    SocksError(SocksError&& other) noexcept;
+    SocksError(const SocksError& other);
+
+    SocksError& operator=(SocksError&& other) noexcept;
+    SocksError& operator=(const SocksError& other);
 
     explicit operator bool() const;
 

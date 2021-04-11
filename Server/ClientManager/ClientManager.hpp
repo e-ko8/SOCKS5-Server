@@ -14,28 +14,33 @@ class ClientsManager
 public:
 
     explicit ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context& ctx_);
+    ClientsManager(ClientsManager&& other) = delete;
+    ClientsManager(const ClientsManager& other) = delete;
 
-    void EraseRoute(int from, int to);
+    ClientsManager& operator=(ClientsManager&& other) = delete;
+    ClientsManager& operator=(const ClientsManager& other) = delete;
 
-    void AddRoute(int from, int to);
+    void EraseRoute(u_long from, u_long to);
 
-    [[nodiscard]] bool IsClient(int desc);
+    void AddRoute(u_long from, u_long to);
 
-    int AddClient();
+    [[nodiscard]] bool IsClient(u_long desc);
 
-    void DeleteClient(int desc);
+    u_long AddClient();
 
-    std::unique_ptr<Client>& GetClient(int desc);
+    void DeleteClient(u_long desc);
 
-    int GetRoute(int from);
+    std::unique_ptr<Client>& GetClient(u_long desc);
 
-    bool IsRouteExist(int from);
+    u_long GetRoute(u_long from);
+
+    bool IsRouteExist(u_long from);
 
 private:
 
     boost::asio::ip::tcp::socket socket;
-    std::map<int, std::unique_ptr<Client>> clients;
-    std::map<int,int> routes;
+    std::map<u_long, std::unique_ptr<Client>> clients;
+    std::map<u_long,u_long> routes;
 
     AcceptorCtx acceptor_ctx;
 

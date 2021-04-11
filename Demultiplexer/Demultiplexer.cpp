@@ -8,44 +8,44 @@ Demultiplexer::Demultiplexer()  :  id{kqueue()}, event{}, new_event{}, timeout{1
     }
 }
 
-void Demultiplexer::WaitForReadEvent(int desc)
+void Demultiplexer::WaitForReadEvent(u_long desc)
 {
     EV_SET(&event, desc, EVFILT_READ, EV_ADD, 0, 0, nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 
-void Demultiplexer::WaitForWriteEvent(int desc)
+void Demultiplexer::WaitForWriteEvent(u_long desc)
 {
     EV_SET(&event, desc, EVFILT_WRITE, EV_ADD, 0, 0, nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 
-void Demultiplexer::StopReadWaiting(int desc)
+void Demultiplexer::StopReadWaiting(u_long desc)
 {
     EV_SET(&event, desc, EVFILT_READ, EV_DELETE, 0, 0, nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 
-void Demultiplexer::StopWriteWaiting(int desc)
+void Demultiplexer::StopWriteWaiting(u_long desc)
 {
     EV_SET(&event, desc, EVFILT_WRITE, EV_DELETE, 0, 0, nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 
-void Demultiplexer::StopAllEventsWaiting(int desc)
+void Demultiplexer::StopAllEventsWaiting(u_long desc)
 {
     StopReadWaiting(desc);
     StopWriteWaiting(desc);
     StopTimer(desc);
 }
 
-void Demultiplexer::StartTimer(int desc, int duration)
+void Demultiplexer::StartTimer(u_long desc, u_long duration)
 {
     EV_SET(&event, desc, EVFILT_TIMER, EV_ADD, 0, (duration), nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 
-void Demultiplexer::StopTimer(int desc)
+void Demultiplexer::StopTimer(u_long desc)
 {
     EV_SET(&event, desc, EVFILT_TIMER, EV_DELETE, 0, 0, nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
@@ -63,5 +63,40 @@ struct kevent Demultiplexer::WaitEvent()
 {
     while(kevent(id, nullptr, 0, &new_event, 1, &timeout) < 1);
     return new_event;
+}
+
+Demultiplexer::Demultiplexer(Demultiplexer &&other) noexcept
+{
+    id = other.id;
+    other.id = -1;
+
+    event = other.event;
+    other.event = {};
+
+    new_event = other.new_event;
+    other.new_event = {};
+
+    timeout = other.timeout;
+    other.timeout = {};
+}
+
+Demultiplexer &Demultiplexer::operator=(Demultiplexer &&other) noexcept
+{
+    if(this!=&other)
+    {
+        id = other.id;
+        other.id = -1;
+
+        event = other.event;
+        other.event = {};
+
+        new_event = other.new_event;
+        other.new_event = {};
+
+        timeout = other.timeout;
+        other.timeout = {};
+    }
+
+    return *this;
 }
 

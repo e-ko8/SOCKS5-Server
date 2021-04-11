@@ -1,22 +1,25 @@
 #include "Logger.hpp"
+#include <chrono>
+#include <sstream>
 
 Logger::Logger(std::string path)
 {
+    std::string filename = FormFilename();
     std::string filepath;
 
     if(path.empty())
     {
-        filepath = "server.log";
+        filepath = filename;
     }
 
     else if(path.back() == '/')
     {
-        filepath = {std::move(path) + "server.log"};
+        filepath = {std::move(path) + filename};
     }
 
     else
     {
-        filepath = {std::move(path) + "/server.log"};
+        filepath = {std::move(path) + "/" + filename};
     }
 
     logfile.open(filepath);
@@ -27,9 +30,9 @@ Logger::Logger(std::string path)
     }
 }
 
-void Logger::Log(std::string error)
+void Logger::Log(std::string msg)
 {
-    logs.emplace_back(std::move(error));
+    logs.emplace_back(std::move(msg) + "\n");
 }
 
 void Logger::Flush()
@@ -65,4 +68,21 @@ Logger::Logger(Logger &&other) noexcept
 {
     logs = std::move(other.logs);
     logfile = std::move(other.logfile);
+}
+
+std::string Logger::FormFilename()
+{
+    std::time_t current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm* local_time = localtime(&current_time);
+
+    std::ostringstream os;
+    os << "server_"
+    << std::setw(2) << std::setfill('0') << std::to_string(local_time->tm_mday) << "."
+    << std::setw(2) << std::setfill('0') << std::to_string(local_time->tm_mon + 1) << "."
+    << std::to_string(local_time->tm_year+1900) << "_"
+    << std::setw(2) << std::setfill('0') << std::to_string(local_time->tm_hour) << ":"
+    << std::setw(2) << std::setfill('0')  << std::to_string(local_time->tm_min) << ":"
+    << std::setw(2) << std::setfill('0') << std::to_string(local_time->tm_sec) << ".log";
+
+    return os.str();
 }

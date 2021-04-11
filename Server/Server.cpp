@@ -2,7 +2,7 @@
 #include <iostream>
 #include <boost/exception/diagnostic_information.hpp>
 
-Server::Server(ServerParameters &input, Logger& logger_) : server_params{input}, listener{server_params.ctx}, clients_manager{listener.acceptor,server_params.ctx},
+Server::Server(ServerParameters &input, Logger& logger_) : server_params{input}, listener{server_params.ctx}, clients_manager{ClientsManager{listener.acceptor,server_params.ctx}},
                                           logger(logger_)
 {
     boost::asio::ip::tcp::endpoint ep{boost::asio::ip::address::from_string("127.0.0.1"), server_params.port};
@@ -22,7 +22,7 @@ Server::Server(ServerParameters &input, Logger& logger_) : server_params{input},
 
 [[noreturn]] void Server::StartListening()
 {
-    std::cerr << "Listening...\n";
+    logger.Log("Listening...");
     while(true)
     {
         auto event = kqueue_manager.WaitEvent();
@@ -67,7 +67,7 @@ Server::Server(ServerParameters &input, Logger& logger_) : server_params{input},
 
         catch (boost::exception& exception)
         {
-            std::cerr << boost::diagnostic_information(exception) << "\n";
+            logger.Log(boost::diagnostic_information(exception));
             if(event.ident!=listener.descriptor)
             {
                 RemoveClient(event.ident);
@@ -76,7 +76,7 @@ Server::Server(ServerParameters &input, Logger& logger_) : server_params{input},
 
         catch (std::exception& exception)
         {
-            std::cerr << exception.what() << "\n";
+            logger.Log(exception.what());
             if(event.ident!=listener.descriptor)
             {
                 RemoveClient(event.ident);
@@ -87,7 +87,7 @@ Server::Server(ServerParameters &input, Logger& logger_) : server_params{input},
 
 void Server::AcceptClient()
 {
-    int client_desc = clients_manager.AddClient();
+    u_long client_desc = clients_manager.AddClient();
 
     if(client_desc!=-1)
     {
@@ -95,11 +95,11 @@ void Server::AcceptClient()
     }
 }
 
-void Server::RemoveClient(int desc)
+void Server::RemoveClient(u_long desc)
 {
     kqueue_manager.StopAllEventsWaiting(desc);
 
-    int third_party_desc = clients_manager.GetRoute(desc);
+    u_long third_party_desc = clients_manager.GetRoute(desc);
     kqueue_manager.StopAllEventsWaiting(third_party_desc);
 
     clients_manager.DeleteClient(desc);
@@ -122,7 +122,7 @@ void Server::ReadEventOccured(const struct kevent& event)
 
             if(!clients_manager.IsRouteExist(event.ident))
             {
-                int third_party_desc = client->GetServerDescriptor();
+                u_long third_party_desc = client->GetServerDescriptor();
                 clients_manager.AddRoute(event.ident, third_party_desc);
                 std::cerr << event.ident << " -> " << third_party_desc << "\n";
                 std::cerr << third_party_desc << " <- " << event.ident << "\n";
@@ -136,7 +136,7 @@ void Server::ReadEventOccured(const struct kevent& event)
 
     else
     {
-        int client_desc = clients_manager.GetRoute(event.ident);
+        u_long client_desc = clients_manager.GetRoute(event.ident);
         auto& client = clients_manager.GetClient(client_desc);
 
         client->ReadFromServer(event.data);
@@ -170,7 +170,7 @@ void Server::WriteEventOccured(const struct kevent& event)
 
     else
     {
-        int client_desc = clients_manager.GetRoute(event.ident);
+        u_long client_desc = clients_manager.GetRoute(event.ident);
         auto& client = clients_manager.GetClient(client_desc);
 
         client->WriteToServer();

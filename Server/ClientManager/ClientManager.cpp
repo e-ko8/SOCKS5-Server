@@ -6,7 +6,7 @@ ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost:
 
 }
 
-void ClientsManager::EraseRoute(int from, int to)
+void ClientsManager::EraseRoute(u_long from, u_long to)
 {
     if (routes.count(from)!=0)
     {
@@ -19,23 +19,23 @@ void ClientsManager::EraseRoute(int from, int to)
     }
 }
 
-void ClientsManager::AddRoute(int from, int to)
+void ClientsManager::AddRoute(u_long from, u_long to)
 {
     routes[from] = to;
     routes[to] = from;
 }
 
-bool ClientsManager::IsClient(int desc)
+bool ClientsManager::IsClient(u_long desc)
 {
     return clients.count(desc)!=0;
 }
 
-int ClientsManager::AddClient()
+u_long ClientsManager::AddClient()
 {
     boost::system::error_code error;
 
     acceptor_ctx.acceptor.accept(socket,error);
-    int client_descriptor = socket.native_handle();
+    u_long client_descriptor = socket.native_handle();
 
     if (!error)
     {
@@ -46,14 +46,14 @@ int ClientsManager::AddClient()
     return client_descriptor;
 }
 
-std::unique_ptr<Client>& ClientsManager::GetClient(int desc)
+std::unique_ptr<Client>& ClientsManager::GetClient(u_long desc)
 {
     return clients.at(desc);
 }
 
-void ClientsManager::DeleteClient(int desc)
+void ClientsManager::DeleteClient(u_long desc)
 {
-    int third_party_desc = GetRoute(desc);
+    u_long third_party_desc = GetRoute(desc);
 
     EraseRoute(desc, third_party_desc);
 
@@ -70,7 +70,7 @@ void ClientsManager::DeleteClient(int desc)
     }
 }
 
-int ClientsManager::GetRoute(int from)
+u_long ClientsManager::GetRoute(u_long from)
 {
     if(IsRouteExist(from))
     {
@@ -80,7 +80,7 @@ int ClientsManager::GetRoute(int from)
     return -1;
 }
 
-bool ClientsManager::IsRouteExist(int from)
+bool ClientsManager::IsRouteExist(u_long from)
 {
     return routes.count(from)!=0;
 }
