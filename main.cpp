@@ -1,10 +1,26 @@
 #include "Server.hpp"
+#include <iostream>
 
 int main(int argc, char* argv[])
 {
-    ServerParameters input{.port = 5002, .threads = 1};
-    std::string logpath;
-    Logger logger(logpath);
-    Server proxy(input, logger);
+    try
+    {
+        ServerParameters input{.port = 5003, .threads = 4};
+        Listener l{input.ctx};
+        std::string logpath;
+        Logger logger(logpath);
+        std::mutex m;
+        CommonObjects obj{l, logger,m,input.ctx};
+
+        Server proxy(input, logger,obj);
+
+        proxy.StartListening();
+    }
+
+    catch(std::exception& error)
+    {
+        std::cerr << error.what() << "\n";
+    }
+
     return 0;
 }

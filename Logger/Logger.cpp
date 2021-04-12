@@ -33,6 +33,10 @@ Logger::Logger(std::string path)
 void Logger::Log(std::string msg)
 {
     logs.emplace_back(std::move(msg) + "\n");
+    if(logs.size() > 100)
+    {
+        Flush();
+    }
 }
 
 void Logger::Flush()

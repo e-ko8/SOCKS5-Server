@@ -1,11 +1,13 @@
 #pragma once
 #include <boost/asio.hpp>
 #include <map>
+#include <vector>
 
 #include "Demultiplexer.hpp"
 #include "Client.hpp"
 #include "ClientManager.hpp"
 #include "Logger.hpp"
+#include "ThreadWorker.hpp"
 
 struct ServerParameters
 {
@@ -14,42 +16,35 @@ struct ServerParameters
     std::size_t threads;
 };
 
-struct Listener
+/*struct Listener
 {
     explicit Listener(boost::asio::io_context& ctx) : acceptor{ctx} {};
     boost::asio::ip::tcp::acceptor acceptor;
     int descriptor = -1;
-};
+};*/
 
-class Server
+class Server : public ThreadWorker
 {
 
 public:
 
-    explicit Server(ServerParameters& input, Logger& logger_);
+    explicit Server(ServerParameters& input, Logger& logger_, CommonObjects& common);
     Server(Server&& other) = delete;
     Server(const Server& other) = delete;
 
     Server& operator=(Server&& other) = delete;
     Server& operator=(const Server& other) = delete;
 
-    [[noreturn]] void StartListening();
+    virtual void Work() override;
+    void BalanceNewClient();
+    void StartListening();
 
 private:
 
-    void AcceptClient();
-
-    void RemoveClient(u_long desc);
-
-    void ReadEventOccured(const struct kevent& event);
-
-    void WriteEventOccured(const struct kevent& event);
-
     ServerParameters& server_params;
-    ClientsManager clients_manager;
-    Listener listener;
-    Demultiplexer kqueue_manager;
-    Logger& logger;
+    std::vector<ThreadWorker> usual_workers;
+    CommonObjects& objects;
+    std::vector<std::thread> threads;
 };
 
 

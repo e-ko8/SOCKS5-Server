@@ -1,7 +1,7 @@
 #include "ClientManager.hpp"
 #include <iostream>
 
-ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_, Logger& logger_): socket{ctx_}, acceptor_ctx{ctx_,acceptor_}, logger{logger_}
+ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_, Logger& logger_): socket{ctx_}, acceptor{acceptor_}, ctx{ctx_}, logger{logger_}//, acceptor_ctx{ctx_,acceptor_}, logger{logger_}
 {
 
 }
@@ -34,14 +34,13 @@ u_long ClientsManager::AddClient()
 {
     boost::system::error_code error;
 
-    acceptor_ctx.acceptor.accept(socket,error);
+    acceptor.accept(socket,error);
     u_long client_descriptor = socket.native_handle();
 
     if (!error)
     {
-
         logger.Log("Connected client with ip " + socket.remote_endpoint().address().to_string() + " and desc " + std::to_string(client_descriptor));
-        clients[client_descriptor] = std::make_unique<Client>(std::move(socket),acceptor_ctx.ctx);
+        clients[client_descriptor] = std::make_unique<Client>(std::move(socket),ctx);
     }
 
     return client_descriptor;
@@ -84,6 +83,11 @@ u_long ClientsManager::GetRoute(u_long from)
 bool ClientsManager::IsRouteExist(u_long from)
 {
     return routes.count(from)!=0;
+}
+
+u_long ClientsManager::GetClientsCount()
+{
+    return clients.size();
 }
 
 

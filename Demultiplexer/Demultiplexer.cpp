@@ -1,4 +1,5 @@
 #include "Demultiplexer.hpp"
+#include <iostream>
 
 Demultiplexer::Demultiplexer()  :  id{kqueue()}, event{}, new_event{}, timeout{1,0}
 {
@@ -61,7 +62,7 @@ Demultiplexer::~Demultiplexer()
 
 struct kevent Demultiplexer::WaitEvent()
 {
-    while(kevent(id, nullptr, 0, &new_event, 1, &timeout) < 1);
+    kevent(id, nullptr, 0, &new_event, 1, &timeout);
     return new_event;
 }
 
@@ -98,5 +99,10 @@ Demultiplexer &Demultiplexer::operator=(Demultiplexer &&other) noexcept
     }
 
     return *this;
+}
+
+int Demultiplexer::GetKqueueId() const
+{
+    return id;
 }
 

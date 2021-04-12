@@ -32,6 +32,8 @@ public:
     void StartTimer(u_long desc, u_long duration);
     void StopTimer(u_long desc);
 
+    [[nodiscard]] int GetKqueueId() const;
+
     ~Demultiplexer();
 
 private:

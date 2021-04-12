@@ -11,6 +11,7 @@ set(    INCLUDE_PATHS
         Server/ClientManager
         Exceptions
         Logger
+        Server/ThreadWorker
         )
 
 
@@ -23,6 +24,7 @@ set(    SOURCE_FILES
         Server/ClientManager/ClientManager.cpp
         Exceptions/SocksError.cpp
         Logger/Logger.cpp
+        Server/ThreadWorker/ThreadWorker.cpp
         )
 
 

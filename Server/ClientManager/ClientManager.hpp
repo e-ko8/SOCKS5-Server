@@ -15,10 +15,26 @@ class ClientsManager
 public:
 
     explicit ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context& ctx_, Logger& logger_);
-    ClientsManager(ClientsManager&& other) = delete;
+    ClientsManager(ClientsManager&& other) noexcept : acceptor(other.acceptor), ctx(other.ctx), socket(std::move(other.socket)), logger(other.logger)
+    {
+        routes = std::move(other.routes);
+        clients = std::move(other.clients);
+    }
     ClientsManager(const ClientsManager& other) = delete;
 
     ClientsManager& operator=(ClientsManager&& other) = delete;
+    /*{
+        if(this!=&other)
+        {
+            routes = std::move(other.routes);
+            clients = std::move(other.clients);
+            acceptor = std::move(other.acceptor);
+            ctx = std::move(other.ctx);
+
+        }
+
+        return *this;
+    }*/
     ClientsManager& operator=(const ClientsManager& other) = delete;
 
     void EraseRoute(u_long from, u_long to);
@@ -29,6 +45,17 @@ public:
 
     u_long AddClient();
 
+    template<typename NodeType>
+    void TakeClient(NodeType& node)
+    {
+        clients.insert(std::move(node));
+    }
+
+    auto ExtractClient(u_long desc)
+    {
+        return clients.extract(desc);
+    }
+
     void DeleteClient(u_long desc);
 
     std::unique_ptr<Client>& GetClient(u_long desc);
@@ -37,13 +64,16 @@ public:
 
     bool IsRouteExist(u_long from);
 
+    u_long GetClientsCount();
+
 private:
 
     boost::asio::ip::tcp::socket socket;
     std::map<u_long, std::unique_ptr<Client>> clients;
     std::map<u_long,u_long> routes;
 
-    AcceptorCtx acceptor_ctx;
+    boost::asio::io_context& ctx;
+    boost::asio::ip::tcp::acceptor& acceptor;
     Logger& logger;
 };
 
