@@ -3,6 +3,7 @@
 #include "Client.hpp"
 #include <memory>
 #include "Logger.hpp"
+#include <iostream>
 
 struct AcceptorCtx
 {
@@ -44,17 +45,6 @@ public:
     [[nodiscard]] bool IsClient(u_long desc);
 
     u_long AddClient();
-
-    template<typename NodeType>
-    void TakeClient(NodeType& node)
-    {
-        clients.insert(std::move(node));
-    }
-
-    auto ExtractClient(u_long desc)
-    {
-        return clients.extract(desc);
-    }
 
     void DeleteClient(u_long desc);
 

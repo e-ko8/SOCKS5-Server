@@ -77,6 +77,7 @@ void ThreadWorker::Work()
 
 void ThreadWorker::RemoveClient(u_long desc)
 {
+    std::lock_guard lock(objects.mutex);
     kqueue_manager.StopAllEventsWaiting(desc);
 
     u_long third_party_desc = clients_manager.GetRoute(desc);

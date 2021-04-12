@@ -3,6 +3,7 @@
 #include <mutex>
 #include "ClientManager.hpp"
 #include "Demultiplexer.hpp"
+#include <iostream>
 
 struct Listener
 {
@@ -33,7 +34,7 @@ public:
 
     virtual void Work();
 
-    CommonObjects objects;
+    CommonObjects& objects;
 
     ClientsManager clients_manager;
     Demultiplexer kqueue_manager;
@@ -42,15 +43,9 @@ public:
 
     u_long GetThreadLoad();
 
-    template<typename NodeType>
-    void TakeClient(NodeType& node)
-   {
-       clients_manager.TakeClient(node);
-   }
+    void AcceptClient();
 
 protected:
-
-    void AcceptClient();
 
     void RemoveClient(u_long desc);
 

@@ -42,9 +42,9 @@ public:
 private:
 
     ServerParameters& server_params;
-    std::vector<ThreadWorker> usual_workers;
-    CommonObjects& objects;
+    std::vector<ThreadWorker> workers;
     std::vector<std::thread> threads;
+    std::map<int, ThreadWorker*> workers_references;
 };
 
 

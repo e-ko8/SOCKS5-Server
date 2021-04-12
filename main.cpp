@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
     {
         ServerParameters input{.port = 5003, .threads = 4};
         Listener l{input.ctx};
-        std::string logpath;
+        std::string logpath = "Logs";
         Logger logger(logpath);
         std::mutex m;
         CommonObjects obj{l, logger,m,input.ctx};
