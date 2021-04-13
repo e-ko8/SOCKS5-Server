@@ -40,6 +40,8 @@ public:
 
     void AcceptClient();
 
+    void StopWork();
+
 protected:
 
     CommonObjects& objects;

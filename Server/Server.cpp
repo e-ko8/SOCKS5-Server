@@ -1,6 +1,9 @@
 #include "Server.hpp"
 #include <iostream>
 #include <boost/exception/diagnostic_information.hpp>
+#include <csignal>
+
+Server* Server::me = nullptr;
 
 Server::Server(ServerParameters &input, Logger& logger_, CommonObjects& common) : server_params{input}, ThreadWorker(common)
 {
@@ -15,6 +18,13 @@ Server::Server(ServerParameters &input, Logger& logger_, CommonObjects& common) 
 
     objects.listener.descriptor = objects.listener.acceptor.native_handle();
     kqueue_manager.WaitForReadEvent(objects.listener.descriptor);
+
+    signal_manager.SetHandler(&Server::Interrupt);
+    signal_manager.RegisterSignal(SIGINT);
+    signal_manager.RegisterSignal(SIGTSTP);
+    signal_manager.RegisterSignal(SIGTERM);
+
+    me = this;
 
     for(std::size_t i = 0; i < server_params.threads - 1; i++)
     {
@@ -131,12 +141,29 @@ void Server::StartListening()
 
     workers_references[kqueue_manager.GetKqueueId()] = this;
 
-    objects.logger.Log("Listening...");
+    {
+        std::lock_guard lock(objects.mutex);
+        objects.logger.Log("Listening...");
+    }
 
     Work();
 
-    for (auto& th : threads)
+    for (auto& thread : threads)
     {
-        th.join();
+        thread.join();
     }
+}
+
+void Server::Interrupt(int sig)
+{
+    std::lock_guard lock(me->objects.mutex);
+
+    me->objects.logger.Log("Server interrupted with signal " + std::to_string(sig));
+
+    for(auto& worker : me->workers)
+    {
+        worker.StopWork();
+    }
+
+    me->StopWork();
 }

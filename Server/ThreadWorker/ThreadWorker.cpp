@@ -10,6 +10,13 @@ clients_manager(obj.listener.acceptor, obj.ctx, obj.logger)
 
 void ThreadWorker::Work()
 {
+    {
+        std::lock_guard lock(objects.mutex);
+        std::ostringstream os;
+        os << "Worker " << std::this_thread::get_id() << " started";
+        objects.logger.Log(os.str());
+    }
+
     while(work)
     {
         auto event = kqueue_manager.WaitEvent();
@@ -73,6 +80,14 @@ void ThreadWorker::Work()
             }
         }
     }
+
+    {
+        std::lock_guard lock(objects.mutex);
+        std::ostringstream os;
+        os << "Worker " << std::this_thread::get_id() << " stopped";
+        objects.logger.Log(os.str());
+    }
+
 }
 
 void ThreadWorker::RemoveClient(u_long desc)
@@ -183,6 +198,11 @@ ThreadWorker::ThreadWorker(ThreadWorker &&other) noexcept : objects(other.object
 {
     work = other.work;
     other.work = false;
+}
+
+void ThreadWorker::StopWork()
+{
+    work = false;
 }
 
 
