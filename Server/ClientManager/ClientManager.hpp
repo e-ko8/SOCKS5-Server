@@ -5,37 +5,15 @@
 #include "Logger.hpp"
 #include <iostream>
 
-struct AcceptorCtx
-{
-    boost::asio::io_context& ctx;
-    boost::asio::ip::tcp::acceptor& acceptor;
-};
-
 class ClientsManager
 {
 public:
 
     explicit ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context& ctx_, Logger& logger_);
-    ClientsManager(ClientsManager&& other) noexcept : acceptor(other.acceptor), ctx(other.ctx), socket(std::move(other.socket)), logger(other.logger)
-    {
-        routes = std::move(other.routes);
-        clients = std::move(other.clients);
-    }
+    ClientsManager(ClientsManager&& other) noexcept;
     ClientsManager(const ClientsManager& other) = delete;
 
     ClientsManager& operator=(ClientsManager&& other) = delete;
-    /*{
-        if(this!=&other)
-        {
-            routes = std::move(other.routes);
-            clients = std::move(other.clients);
-            acceptor = std::move(other.acceptor);
-            ctx = std::move(other.ctx);
-
-        }
-
-        return *this;
-    }*/
     ClientsManager& operator=(const ClientsManager& other) = delete;
 
     void EraseRoute(u_long from, u_long to);

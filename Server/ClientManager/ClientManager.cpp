@@ -90,4 +90,10 @@ u_long ClientsManager::GetClientsCount()
     return clients.size();
 }
 
+ClientsManager::ClientsManager(ClientsManager &&other) noexcept : acceptor(other.acceptor), ctx(other.ctx), socket(std::move(other.socket)), logger(other.logger)
+{
+    routes = std::move(other.routes);
+    clients = std::move(other.clients);
+}
+
 

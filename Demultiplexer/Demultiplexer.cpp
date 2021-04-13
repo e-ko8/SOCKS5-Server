@@ -40,9 +40,9 @@ void Demultiplexer::StopAllEventsWaiting(u_long desc)
     StopTimer(desc);
 }
 
-void Demultiplexer::StartTimer(u_long desc, u_long duration)
+void Demultiplexer::StartTimer(u_long desc, u_long duration, TimerCoeffs coeff)
 {
-    EV_SET(&event, desc, EVFILT_TIMER, EV_ADD, 0, (duration), nullptr);
+    EV_SET(&event, desc, EVFILT_TIMER, EV_ADD, 0, (duration * static_cast<int>(coeff)), nullptr);
     kevent(id, &event, 1, nullptr, 0, nullptr);
 }
 

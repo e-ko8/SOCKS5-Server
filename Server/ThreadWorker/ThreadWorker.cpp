@@ -90,6 +90,7 @@ void ThreadWorker::ReadEventOccured(const struct kevent &event)
 {
     if (clients_manager.IsClient(event.ident))
     {
+        kqueue_manager.StopTimer(event.ident);
         auto& client = clients_manager.GetClient(event.ident);
         client->ReadFromClient(event.data);
 
@@ -111,6 +112,8 @@ void ThreadWorker::ReadEventOccured(const struct kevent &event)
             kqueue_manager.WaitForWriteEvent(clients_manager.GetRoute(event.ident));
         }
 
+        kqueue_manager.StartTimer(event.ident, 30, TimerCoeffs::MinutesCoeff);
+
     }
 
     else
@@ -127,6 +130,8 @@ void ThreadWorker::WriteEventOccured(const struct kevent &event)
 {
     if (clients_manager.IsClient(event.ident))
     {
+        kqueue_manager.StopTimer(event.ident);
+
         auto& client = clients_manager.GetClient(event.ident);
 
         if(!client->IsHandshakeCompleted())
@@ -145,6 +150,7 @@ void ThreadWorker::WriteEventOccured(const struct kevent &event)
         }
 
         kqueue_manager.StopWriteWaiting(event.ident);
+        kqueue_manager.StartTimer(event.ident, 30, TimerCoeffs::MinutesCoeff);
     }
 
     else
@@ -163,12 +169,20 @@ void ThreadWorker::AcceptClient()
     if(client_desc!=-1)
     {
         kqueue_manager.WaitForReadEvent(client_desc);
+        kqueue_manager.StartTimer(client_desc, 30 ,TimerCoeffs::MinutesCoeff);
     }
 }
 
 u_long ThreadWorker::GetThreadLoad()
 {
     return clients_manager.GetClientsCount();
+}
+
+ThreadWorker::ThreadWorker(ThreadWorker &&other) noexcept : objects(other.objects), clients_manager(std::move(other.clients_manager)),
+                                                            kqueue_manager(std::move(other.kqueue_manager))
+{
+    work = other.work;
+    other.work = false;
 }
 
 

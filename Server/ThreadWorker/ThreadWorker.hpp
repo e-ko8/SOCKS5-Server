@@ -25,27 +25,26 @@ class ThreadWorker
 
 public:
 
-    ThreadWorker(CommonObjects& obj);
-    //ThreadWorker(ThreadWorker&& other) = delete;
-    //ThreadWorker(const ThreadWorker& other) = delete;
+    explicit ThreadWorker(CommonObjects& obj);
+    ThreadWorker(ThreadWorker&& other) noexcept;
+    ThreadWorker(const ThreadWorker& other) = delete;
 
-    //ThreadWorker& operator=(ThreadWorker&& other) = delete;
-    //ThreadWorker& operator=(const ThreadWorker& other) = delete;
+    ThreadWorker& operator=(ThreadWorker&& other) = delete;
+    ThreadWorker& operator=(const ThreadWorker& other) = delete;
 
     virtual void Work();
 
-    CommonObjects& objects;
-
-    ClientsManager clients_manager;
     Demultiplexer kqueue_manager;
-
-    bool work = true;
 
     u_long GetThreadLoad();
 
     void AcceptClient();
 
 protected:
+
+    CommonObjects& objects;
+    ClientsManager clients_manager;
+    bool work = true;
 
     void RemoveClient(u_long desc);
 
