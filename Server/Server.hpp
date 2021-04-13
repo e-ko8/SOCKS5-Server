@@ -1,12 +1,5 @@
 #pragma once
-#include <boost/asio.hpp>
 #include <map>
-#include <vector>
-
-#include "Demultiplexer.hpp"
-#include "Client.hpp"
-#include "ClientManager.hpp"
-#include "Logger.hpp"
 #include "ThreadWorker.hpp"
 
 struct SignalManager
@@ -27,7 +20,6 @@ struct SignalManager
 
 struct ServerParameters
 {
-    boost::asio::io_context ctx;
     std::uint16_t port;
     std::size_t threads;
 };
@@ -37,7 +29,7 @@ class Server : public ThreadWorker
 
 public:
 
-    explicit Server(ServerParameters& input, Logger& logger_, CommonObjects& common);
+    explicit Server(ServerParameters server_params,  CommonObjects& common);
     Server(Server&& other) = delete;
     Server(const Server& other) = delete;
 
@@ -55,7 +47,6 @@ private:
     static Server* me;
     SignalManager signal_manager{};
 
-    ServerParameters& server_params;
     std::vector<ThreadWorker> workers;
     std::vector<std::thread> threads;
     std::map<int, ThreadWorker*> workers_references;

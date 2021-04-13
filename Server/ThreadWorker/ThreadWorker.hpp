@@ -3,7 +3,6 @@
 #include <mutex>
 #include "ClientManager.hpp"
 #include "Demultiplexer.hpp"
-#include <iostream>
 
 struct Listener
 {

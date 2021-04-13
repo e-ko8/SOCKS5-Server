@@ -1,9 +1,9 @@
 #pragma once
 #include <boost/asio.hpp>
-#include "Client.hpp"
 #include <memory>
+
+#include "Client.hpp"
 #include "Logger.hpp"
-#include <iostream>
 
 class ClientsManager
 {

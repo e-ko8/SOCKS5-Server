@@ -37,8 +37,6 @@ public:
 
     ~Demultiplexer();
 
-    static TimerCoeffs timer_coeffs;
-
 private:
 
     int id;

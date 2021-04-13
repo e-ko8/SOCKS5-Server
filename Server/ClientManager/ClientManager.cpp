@@ -1,7 +1,6 @@
 #include "ClientManager.hpp"
-#include <iostream>
 
-ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_, Logger& logger_): socket{ctx_}, acceptor{acceptor_}, ctx{ctx_}, logger{logger_}//, acceptor_ctx{ctx_,acceptor_}, logger{logger_}
+ClientsManager::ClientsManager(boost::asio::ip::tcp::acceptor& acceptor_, boost::asio::io_context &ctx_, Logger& logger_): socket{ctx_}, acceptor{acceptor_}, ctx{ctx_}, logger{logger_}
 {
 
 }

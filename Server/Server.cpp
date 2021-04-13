@@ -1,11 +1,10 @@
 #include "Server.hpp"
-#include <iostream>
 #include <boost/exception/diagnostic_information.hpp>
 #include <csignal>
 
 Server* Server::me = nullptr;
 
-Server::Server(ServerParameters &input, Logger& logger_, CommonObjects& common) : server_params{input}, ThreadWorker(common)
+Server::Server(ServerParameters server_params, CommonObjects& common) : ThreadWorker(common)
 {
     boost::asio::ip::tcp::endpoint ep{boost::asio::ip::address::from_string("127.0.0.1"), server_params.port};
 
@@ -34,7 +33,6 @@ Server::Server(ServerParameters &input, Logger& logger_, CommonObjects& common) 
 
 void Server::Work()
 {
-    std::cerr << "Listening\n";
     while(work)
     {
         auto event = kqueue_manager.WaitEvent();

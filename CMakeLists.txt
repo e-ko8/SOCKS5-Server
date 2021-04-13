@@ -12,6 +12,7 @@ set(    INCLUDE_PATHS
         Exceptions
         Logger
         Server/ThreadWorker
+        ProgrammOptions
         )
 
 
@@ -25,6 +26,7 @@ set(    SOURCE_FILES
         Exceptions/SocksError.cpp
         Logger/Logger.cpp
         Server/ThreadWorker/ThreadWorker.cpp
+        ProgrammOptions/Starter.cpp
         )
 
 
@@ -32,5 +34,5 @@ add_executable(SOCKS5-Server ${SOURCE_FILES})
 
 target_include_directories(SOCKS5-Server PUBLIC ${INCLUDE_PATHS})
 
-find_package(Boost 1.71.0 REQUIRED COMPONENTS chrono system thread)
-target_link_libraries(SOCKS5-Server PRIVATE Boost::chrono Boost::system Boost::thread)
+find_package(Boost 1.71.0 REQUIRED COMPONENTS chrono system thread program_options)
+target_link_libraries(SOCKS5-Server PRIVATE Boost::chrono Boost::system Boost::thread Boost::program_options)
